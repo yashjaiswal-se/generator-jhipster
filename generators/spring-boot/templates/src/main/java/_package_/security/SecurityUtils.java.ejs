@@ -144,8 +144,25 @@ public final class SecurityUtils {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         return Optional.ofNullable(securityContext.getAuthentication())
   <%_ } _%>
-            .filter(authentication -> authentication.getCredentials() instanceof String)
-            .map(authentication -> (String) authentication.getCredentials());
+            .map(authentication -> {
+
+        if (authentication instanceof JwtAuthenticationToken jwtAuth) {
+            return jwtAuth.getToken().getTokenValue();
+        }
+
+        Object credentials = authentication.getCredentials();
+
+        if (credentials instanceof Jwt jwt) {
+            return jwt.getTokenValue();
+        }
+
+        if (credentials instanceof String token) {
+            return token;
+        }
+
+        return null;
+        })
+        .filter(token -> token != null && !token.isBlank());
     }
   <%_ if (user) { _%>
 
